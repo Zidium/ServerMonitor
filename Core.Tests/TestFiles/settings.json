@@ -1,0 +1,10 @@
+﻿{
+    "ServerId": "1CA421FE-59CE-4DF2-8F83-58705965DED0",
+    "Memory": {
+        "Interval": "00:05:00"
+    },
+    "Disk": {
+        "Interval": "00:01:00",
+        "Disks": [ "C", "D" ]
+    }
+}
