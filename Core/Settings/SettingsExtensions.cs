@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ZidiumServerMonitor
 {
-    public static class SettingsExtentions
+    public static class SettingsExtensions
     {
         public static IServiceCollection AddSettings(this IServiceCollection services, string filename)
         {

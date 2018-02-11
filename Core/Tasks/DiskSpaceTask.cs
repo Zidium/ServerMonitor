@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace ZidiumServerMonitor
 {
@@ -14,6 +15,8 @@ namespace ZidiumServerMonitor
 
         public override TimeSpan Interval { get { return _settings.Interval; } }
 
+        public override TimeSpan Actual { get { return _settings.Timeout; } }
+
         public override string Name { get { return "DiskSpaceTask"; } }
 
         public override void DoWork()
@@ -27,14 +30,14 @@ namespace ZidiumServerMonitor
                     var freeSpaceGb = (double)freeSpace.Value / 1024 / 1024 / 1024;
                     var freeSpaceGbRounded = Math.Round(freeSpaceGb, 2);
                     ZidiumHelper.ServerComponent.SendMetric("Free space on disk " + disk + ", Gb", freeSpaceGbRounded);
-                    TaskComponent.Log.Info($"Free space on disk {disk}: {freeSpaceGbRounded} Gb");
+                    Logger.LogInformation($"Free space on disk {disk}: {freeSpaceGbRounded} Gb");
                 }
             }
         }
 
         protected override void DoStart()
         {
-            TaskComponent.Log.Debug($"Disks: {string.Join(", ", _settings.Disks)}");
+            Logger.LogDebug($"Disks: {string.Join(", ", _settings.Disks)}");
         }
     }
 }

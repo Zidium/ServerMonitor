@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using NickStrupat;
 
 namespace ZidiumServerMonitor
@@ -18,6 +19,8 @@ namespace ZidiumServerMonitor
 
         public override TimeSpan Interval { get { return _settings.Interval; } }
 
+        public override TimeSpan Actual { get { return _settings.Timeout; } }
+
         public override string Name { get { return "FreeMemoryTask"; } }
 
         public override void DoWork()
@@ -26,7 +29,7 @@ namespace ZidiumServerMonitor
             var freeMemoryGb = (double)freeMemory / 1024 / 1024 / 1024;
             var freeMemoryGbRounded = Math.Round(freeMemoryGb, 2);
             ZidiumHelper.ServerComponent.SendMetric("Free memory, Gb", freeMemoryGbRounded);
-            TaskComponent.Log.Info($"Free memory: {freeMemoryGbRounded} Gb");
+            Logger.LogInformation($"Free memory: {freeMemoryGbRounded} Gb");
         }
     }
 }

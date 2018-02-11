@@ -13,11 +13,15 @@ namespace ZidiumServerMonitor
         public class FreeMemoryTaskSettings
         {
             public TimeSpan Interval { get; set; } = TimeSpan.FromMinutes(10);
+
+            public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(20);
         }
 
         public class FreeDiskSpaceTaskSettings
         {
             public TimeSpan Interval { get; set; } = TimeSpan.FromMinutes(10);
+
+            public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(20);
 
             public string[] Disks { get; set; } = new string[0];
         }

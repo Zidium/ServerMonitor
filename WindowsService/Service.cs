@@ -6,8 +6,8 @@ namespace ZidiumServerMonitor
     {
         public void Start()
         {
-            _worker = new Worker();
-            _worker.Start();
+            _application = new Application();
+            _application.Start();
         }
 
         protected override void OnStart(string[] args)
@@ -17,7 +17,7 @@ namespace ZidiumServerMonitor
 
         public new void Stop()
         {
-            _worker.Stop();
+            _application.Stop();
         }
 
         protected override void OnStop()
@@ -25,6 +25,6 @@ namespace ZidiumServerMonitor
             Stop();
         }
 
-        private Worker _worker;
+        private Application _application;
     }
 }

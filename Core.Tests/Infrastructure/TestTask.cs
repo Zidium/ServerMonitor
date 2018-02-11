@@ -9,6 +9,11 @@ namespace ZidiumServerMonitor.Tests
             get { return TimeSpan.FromSeconds(10); }
         }
 
+        public override TimeSpan Actual
+        {
+            get { return TimeSpan.FromSeconds(60); }
+        }
+
         public override string Name { get { return "TestTask"; } }
 
         public int ExecutionCount;

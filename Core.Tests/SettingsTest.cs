@@ -18,9 +18,11 @@ namespace ZidiumServerMonitor.Tests
 
             Assert.NotNull(settings.Memory);
             Assert.Equal(TimeSpan.FromMinutes(10), settings.Memory.Interval);
+            Assert.Equal(TimeSpan.FromMinutes(20), settings.Memory.Timeout);
 
             Assert.NotNull(settings.Disk);
             Assert.Equal(TimeSpan.FromMinutes(10), settings.Disk.Interval);
+            Assert.Equal(TimeSpan.FromMinutes(20), settings.Disk.Timeout);
             Assert.NotNull(settings.Disk.Disks);
             Assert.Empty(settings.Disk.Disks);
         }
@@ -39,9 +41,11 @@ namespace ZidiumServerMonitor.Tests
 
             Assert.NotNull(settings.Memory);
             Assert.Equal(TimeSpan.FromMinutes(5), settings.Memory.Interval);
+            Assert.Equal(TimeSpan.FromMinutes(6), settings.Memory.Timeout);
 
             Assert.NotNull(settings.Disk);
             Assert.Equal(TimeSpan.FromMinutes(1), settings.Disk.Interval);
+            Assert.Equal(TimeSpan.FromMinutes(2), settings.Disk.Timeout);
             Assert.NotNull(settings.Disk.Disks);
             Assert.Equal(2, settings.Disk.Disks.Length);
             Assert.Equal("C", settings.Disk.Disks[0]);

@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Zidium;
 using Zidium.Api;
 
 namespace ZidiumServerMonitor
@@ -14,6 +17,11 @@ namespace ZidiumServerMonitor
         /// Период выполнения
         /// </summary>
         public abstract TimeSpan Interval { get; }
+
+        /// <summary>
+        /// Таймаут выполнения
+        /// </summary>
+        public abstract TimeSpan Actual { get; }
 
         /// <summary>
         /// Название задачи
@@ -31,7 +39,15 @@ namespace ZidiumServerMonitor
 
         public void Start()
         {
-            TaskComponent.Log.Debug($"Starting task, interval: {Interval}");
+            TaskComponent = ZidiumHelper.MonitorComponent.GetOrCreateChildComponentControl("Task", Name);
+            TaskUnittest = TaskComponent.GetOrCreateUnitTestControl("Main");
+
+            var loggerFactory = DependencyInjection.Services.GetRequiredService<ILoggerFactory>();
+            loggerFactory.AddZidiumErrors(TaskComponent.Info.Id, Name);
+            loggerFactory.AddZidiumLog(TaskComponent.Info.Id, Name);
+            Logger = loggerFactory.CreateLogger(Name);
+
+            Logger.LogDebug($"Starting task, interval: {Interval}, timeout: {Actual}");
 
             _cancellationTokenSource = new CancellationTokenSource();
             CancellationToken = _cancellationTokenSource.Token;
@@ -46,11 +62,12 @@ namespace ZidiumServerMonitor
 
         public void Stop()
         {
-            TaskComponent.Log.Debug("Stopping task");
+            Logger.LogDebug("Stopping task");
             _cancellationTokenSource.Cancel();
             _timer.Dispose();
             _timer = null;
             WaitForStop().Wait();
+            Logger.LogDebug("Task stopped");
         }
 
         private async Task WaitForStop()
@@ -76,6 +93,9 @@ namespace ZidiumServerMonitor
             {
                 CancellationToken.ThrowIfCancellationRequested();
                 DoWork();
+
+                // Отправим сигнал о выполнении задачи, с запасом времени в таймаут
+                TaskUnittest.SendResult(UnitTestResult.Success, Actual);
             }
             catch (ThreadAbortException)
             {
@@ -89,11 +109,8 @@ namespace ZidiumServerMonitor
             }
             catch (Exception exception)
             {
-                TaskComponent.Log.Error(exception);
+                Logger.LogError(exception, exception.Message);
             }
-
-            // Отправим сигнал о выполнении задачи, с запасом времени в один интервал
-            TaskUnittest.SendResult(UnitTestResult.Success, Interval + Interval);
 
             // Независимо от наличия ошибки, назначаем следующее выполнение
             _timer.Dispose();
@@ -102,34 +119,10 @@ namespace ZidiumServerMonitor
             _inProgress = false;
         }
 
-        protected IComponentControl TaskComponent
-        {
-            get
-            {
-                if (_taskComponent == null)
-                {
-                    _taskComponent = ZidiumHelper.MonitorComponent.GetOrCreateChildComponentControl("Task", Name);
-                }
+        protected IComponentControl TaskComponent { get; private set; }
 
-                return _taskComponent;
-            }
-        }
+        protected IUnitTestControl TaskUnittest { get; private set; }
 
-        private IComponentControl _taskComponent;
-
-        protected IUnitTestControl TaskUnittest
-        {
-            get
-            {
-                if (_taskUnittest == null)
-                {
-                    _taskUnittest = TaskComponent.GetOrCreateUnitTestControl("Main");
-                }
-
-                return _taskUnittest;
-            }
-        }
-
-        private IUnitTestControl _taskUnittest;
+        protected ILogger Logger { get; private set; }
     }
 }

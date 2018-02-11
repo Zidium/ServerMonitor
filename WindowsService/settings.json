@@ -1,10 +1,12 @@
-{
+﻿{
     "ServerId": "",
     "Memory": {
-        "Interval": "00:01:00"
+        "Interval": "00:01:00",
+        "Timeout": "00:10:00"
     },
     "Disk": {
         "Interval": "00:01:00",
+        "Timeout": "00:10:00",
         "Disks": [ "C" ]
     }
 }

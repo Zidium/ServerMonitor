@@ -6,11 +6,11 @@ namespace ZidiumServerMonitor
     {
         public static void Main(string[] args)
         {
-            var worker = new Worker();
-            worker.Start();
+            var application = new Application();
+            application.Start();
             Console.WriteLine("Press any key to stop...");
             Console.ReadKey();
-            worker.Stop();
+            application.Stop();
         }
     }
 }
