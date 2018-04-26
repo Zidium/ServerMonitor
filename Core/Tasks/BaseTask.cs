@@ -43,8 +43,8 @@ namespace ZidiumServerMonitor
             TaskUnittest = TaskComponent.GetOrCreateUnitTestControl("Main");
 
             var loggerFactory = DependencyInjection.Services.GetRequiredService<ILoggerFactory>();
-            loggerFactory.AddZidiumErrors(TaskComponent.Info.Id, Name);
-            loggerFactory.AddZidiumLog(TaskComponent.Info.Id, Name);
+            loggerFactory.AddZidiumErrors(TaskComponent.Info?.Id, Name);
+            loggerFactory.AddZidiumLog(TaskComponent.Info?.Id, Name);
             Logger = loggerFactory.CreateLogger(Name);
 
             Logger.LogDebug($"Starting task, interval: {Interval}, timeout: {Actual}");
