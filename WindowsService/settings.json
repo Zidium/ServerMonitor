@@ -1,5 +1,5 @@
-﻿{
-    "ServerId": "a9a6b2c1-9b32-4630-a683-54bbaac9ddd7",
+{
+    "ServerId": "",
     "Memory": {
         "Interval": "00:01:00",
         "Timeout": "00:10:00"
