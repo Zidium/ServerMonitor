@@ -4,7 +4,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>ZidiumServerMonitor.Core</AssemblyName>
     <RootNamespace>ZidiumServerMonitor</RootNamespace>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,8 +18,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.0" />
     <PackageReference Include="System.IO.FileSystem.DriveInfo" Version="4.3.1" />
-    <PackageReference Include="Zidium.Api.NetCore" Version="1.0.13" />
-    <PackageReference Include="Zidium.NetCoreLogger" Version="1.0.5" />
+    <PackageReference Include="Zidium.Api.NetCore" Version="1.0.17" />
+    <PackageReference Include="Zidium.NetCoreLogger" Version="1.0.6" />
   </ItemGroup>
 
 </Project>
