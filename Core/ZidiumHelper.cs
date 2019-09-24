@@ -34,11 +34,18 @@ namespace ZidiumServerMonitor
                 {
                     if (_monitorComponent == null)
                     {
-                        _monitorComponent = Client.Instance.GetDefaultComponentControl();
-                        _monitorComponent.Update(new UpdateComponentData()
+                        if (Client.Instance.Config.DefaultComponent.Id.HasValue)
                         {
-                            Version = typeof(ZidiumHelper).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion
-                        });
+                            _monitorComponent = Client.Instance.GetDefaultComponentControl();
+                            _monitorComponent.Update(new UpdateComponentData()
+                            {
+                                Version = typeof(ZidiumHelper).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion
+                            });
+                        }
+                        else
+                        {
+                            _monitorComponent = new FakeComponentControl();
+                        }
                     }
 
                     return _monitorComponent;

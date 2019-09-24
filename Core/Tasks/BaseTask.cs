@@ -41,11 +41,7 @@ namespace ZidiumServerMonitor
         {
             TaskComponent = ZidiumHelper.MonitorComponent.GetOrCreateChildComponentControl("Task", Name);
             TaskUnittest = TaskComponent.GetOrCreateUnitTestControl("Main");
-
-            var loggerFactory = DependencyInjection.Services.GetRequiredService<ILoggerFactory>();
-            loggerFactory.AddZidiumErrors(TaskComponent.Info?.Id, Name);
-            loggerFactory.AddZidiumLog(TaskComponent.Info?.Id, Name);
-            Logger = loggerFactory.CreateLogger(Name);
+            Logger = GetLogger();
 
             Logger.LogDebug($"Starting task, interval: {Interval}, timeout: {Actual}");
 
@@ -56,6 +52,15 @@ namespace ZidiumServerMonitor
 
             // Запускаем задачу сразу, но через таймер, чтобы был отдельный поток
             _timer = new Timer(OnTimerCallback, null, 0, Timeout.Infinite);
+        }
+
+        protected virtual ILogger GetLogger()
+        {
+            var loggerFactory = DependencyInjection.Services.GetRequiredService<ILoggerFactory>();
+            loggerFactory.AddZidiumErrors(TaskComponent.Info?.Id, Name);
+            loggerFactory.AddZidiumLog(TaskComponent.Info?.Id, Name);
+            var logger = loggerFactory.CreateLogger(Name);
+            return logger;
         }
 
         protected virtual void DoStart() { }

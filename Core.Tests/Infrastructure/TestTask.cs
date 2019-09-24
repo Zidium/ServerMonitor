@@ -1,4 +1,6 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ZidiumServerMonitor.Tests
 {
@@ -21,6 +23,11 @@ namespace ZidiumServerMonitor.Tests
         public override void DoWork()
         {
             ExecutionCount++;
+        }
+
+        protected override ILogger GetLogger()
+        {
+            return NullLogger.Instance;
         }
     }
 }

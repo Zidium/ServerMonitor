@@ -5,15 +5,15 @@ rmdir /s /q Release
 
 "%msbuild.exe%" WindowsService\WindowsService.csproj /t:Build /p:Configuration=Release /v:minimal
 
-xcopy /E /Y /S WindowsService\bin\Release\*.pdb Release\WindowsService\
-xcopy /E /Y /S WindowsService\bin\Release\Zidium.config Release\WindowsService\
-xcopy /E /Y /S WindowsService\bin\Release\ZidiumServerMonitor.exe.config Release\WindowsService\
-xcopy /E /Y /S WindowsService\bin\Release\*.exe Release\WindowsService\
-xcopy /E /Y /S WindowsService\bin\Release\*.dll Release\WindowsService\
-xcopy /E /Y /S WindowsService\bin\Release\settings.json Release\WindowsService\
+xcopy /Y WindowsService\bin\Release\*.pdb Release\WindowsService\
+xcopy /Y WindowsService\bin\Release\Zidium.config Release\WindowsService\
+xcopy /Y WindowsService\bin\Release\ZidiumServerMonitor.exe.config Release\WindowsService\
+xcopy /Y WindowsService\bin\Release\*.exe Release\WindowsService\
+xcopy /Y WindowsService\bin\Release\*.dll Release\WindowsService\
+xcopy /Y WindowsService\bin\Release\settings.json Release\WindowsService\
 
-"%msbuild.exe%" NetCoreConsoleApplication\NetCoreConsoleApplication.csproj /t:Build /p:Configuration=Release /v:minimal /p:DeployOnBuild=true /p:PublishProfile=CreateRelease.pubxml
+dotnet publish NetCoreConsoleApplication\NetCoreConsoleApplication.csproj -c Release -o .\bin\Publish -v normal
 
-xcopy /E /Y /S NetCoreConsoleApplication\bin\Release\PublishOutput\*.* Release\NetCoreConsoleApplication\
+xcopy /E /Y /S NetCoreConsoleApplication\bin\Publish\*.* Release\NetCoreConsoleApplication\
 
 pause
