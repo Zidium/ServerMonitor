@@ -8,13 +8,22 @@ namespace ZidiumServerMonitor
     {
         public static long? GetDriveFreeSpace(string drive)
         {
-            var drives = DriveInfo.GetDrives();
-            var driveInfo = drives.FirstOrDefault(t => t.Name.StartsWith(drive, StringComparison.OrdinalIgnoreCase));
+            DriveInfo di;
 
-            if (driveInfo == null)
-                return null;
+            try
+            {
+                di = new DriveInfo(drive);
+            }
+            catch
+            {
+                var drives = DriveInfo.GetDrives();
+                di = drives.FirstOrDefault(t => t.Name.StartsWith(drive, StringComparison.OrdinalIgnoreCase));
 
-            return driveInfo.AvailableFreeSpace;
+                if (di == null)
+                    return null;
+            }
+
+            return di.AvailableFreeSpace;
         }
     }
 }
