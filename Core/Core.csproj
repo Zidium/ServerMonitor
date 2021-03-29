@@ -4,9 +4,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>ZidiumServerMonitor.Core</AssemblyName>
     <RootNamespace>ZidiumServerMonitor</RootNamespace>
-    <Version>1.4.0</Version>
-    <AssemblyVersion>1.4.0.0</AssemblyVersion>
-    <FileVersion>1.4.0.0</FileVersion>
+    <Version>1.5.0</Version>
+    <AssemblyVersion>1.5.0.0</AssemblyVersion>
+    <FileVersion>1.5.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
