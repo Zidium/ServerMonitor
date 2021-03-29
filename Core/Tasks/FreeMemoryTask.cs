@@ -28,7 +28,7 @@ namespace ZidiumServerMonitor
             var freeMemory = (long)_computerInfo.AvailablePhysicalMemory;
             var freeMemoryGb = (double)freeMemory / 1024 / 1024 / 1024;
             var freeMemoryGbRounded = Math.Round(freeMemoryGb, 2);
-            ZidiumHelper.ServerComponent.SendMetric("Free memory, Gb", freeMemoryGbRounded);
+            ZidiumHelper.ServerComponent.SendMetric("Free memory, Gb", freeMemoryGbRounded, Actual);
             Logger.LogInformation($"Free memory: {freeMemoryGbRounded} Gb");
         }
     }

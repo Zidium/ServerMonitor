@@ -29,7 +29,7 @@ namespace ZidiumServerMonitor
                 {
                     var freeSpaceGb = (double)freeSpace.Value / 1024 / 1024 / 1024;
                     var freeSpaceGbRounded = Math.Round(freeSpaceGb, 2);
-                    ZidiumHelper.ServerComponent.SendMetric("Free space on disk " + disk + ", Gb", freeSpaceGbRounded);
+                    ZidiumHelper.ServerComponent.SendMetric("Free space on disk " + disk + ", Gb", freeSpaceGbRounded, Actual);
                     Logger.LogInformation($"Free space on disk {disk}: {freeSpaceGbRounded} Gb");
                 }
             }
