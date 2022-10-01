@@ -1,133 +1,119 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+using Cronos;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Zidium;
 using Zidium.Api;
+using Zidium.Api.Dto;
 
 namespace ZidiumServerMonitor
 {
-    /// <summary>
-    /// Базовый класс периодической задачи
-    /// </summary>
-    public abstract class BaseTask
+    internal abstract class BaseTask : BackgroundService
     {
-        /// <summary>
-        /// Период выполнения
-        /// </summary>
-        public abstract TimeSpan Interval { get; }
+        protected BaseTask(
+            ILoggerFactory loggerFactory,
+            ZidiumComponentsProvider zidiumComponentsProvider,
+            BaseTaskOptions options)
+        {
+            _loggerFactory = loggerFactory;
+            ZidiumComponentsProvider = zidiumComponentsProvider;
+            _options = options;
+        }
 
-        /// <summary>
-        /// Таймаут выполнения
-        /// </summary>
-        public abstract TimeSpan Actual { get; }
+        private readonly ILoggerFactory _loggerFactory;
+
+        protected readonly ZidiumComponentsProvider ZidiumComponentsProvider;
+
+        private readonly BaseTaskOptions _options;
+
+        protected IComponentControl TaskComponent { get; private set; }
+
+        protected IUnitTestControl TaskUnittest { get; private set; }
+
+        protected ILogger Logger;
+
+        private CronExpression _cronExpression;
 
         /// <summary>
         /// Название задачи
         /// </summary>
         public abstract string Name { get; }
 
-        /// <summary>
-        /// Основное действие
-        /// </summary>
-        public abstract void DoWork();
-
-        private CancellationTokenSource _cancellationTokenSource;
-
-        protected CancellationToken CancellationToken;
-
-        public void Start()
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            TaskComponent = ZidiumHelper.MonitorComponent.GetOrCreateChildComponentControl("Task", Name);
+            Logger = _loggerFactory.CreateLogger(Name);
+
+            if (!_options.Enabled)
+            {
+                Logger.LogInformation("Task disabled");
+                return;
+            }
+
+            TaskComponent = ZidiumComponentsProvider.GetMonitorComponent().GetOrCreateChildComponentControl("Task", Name);
             TaskUnittest = TaskComponent.GetOrCreateUnitTestControl("Main");
-            Logger = GetLogger();
+            _loggerFactory.AddZidiumErrors(TaskComponent.Info?.Id, Name);
+            _loggerFactory.AddZidiumLog(TaskComponent.Info?.Id, Name);
 
-            Logger.LogDebug($"Starting task, interval: {Interval}, timeout: {Actual}");
-
-            _cancellationTokenSource = new CancellationTokenSource();
-            CancellationToken = _cancellationTokenSource.Token;
-
-            DoStart();
-
-            // Запускаем задачу сразу, но через таймер, чтобы был отдельный поток
-            _timer = new Timer(OnTimerCallback, null, 0, Timeout.Infinite);
+            Logger.LogInformation($"Schedule: {_options.Schedule}");
+            _cronExpression = CronExpression.Parse(_options.Schedule, CronFormat.IncludeSeconds);
+            Logger.LogTrace($"{Name} started");
+            await base.StartAsync(cancellationToken);
         }
 
-        protected virtual ILogger GetLogger()
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            var loggerFactory = DependencyInjection.Services.GetRequiredService<ILoggerFactory>();
-            loggerFactory.AddZidiumErrors(TaskComponent.Info?.Id, Name);
-            loggerFactory.AddZidiumLog(TaskComponent.Info?.Id, Name);
-            var logger = loggerFactory.CreateLogger(Name);
-            return logger;
-        }
-
-        protected virtual void DoStart() { }
-
-        public void Stop()
-        {
-            Logger.LogDebug("Stopping task");
-            _cancellationTokenSource.Cancel();
-            _timer.Dispose();
-            _timer = null;
-            WaitForStop().Wait();
-            Logger.LogDebug("Task stopped");
-        }
-
-        private async Task WaitForStop()
-        {
-            var timeoutDateTime = DateTime.Now + _waitForStopTimeout;
-            while (DateTime.Now < timeoutDateTime && _inProgress)
-            {
-                await Task.Delay(1000);
-            }
-        }
-
-        private static TimeSpan _waitForStopTimeout = TimeSpan.FromSeconds(10);
-
-        private Timer _timer;
-
-        private bool _inProgress;
-
-        private void OnTimerCallback(object state)
-        {
-            _inProgress = true;
-
-            try
-            {
-                CancellationToken.ThrowIfCancellationRequested();
-                DoWork();
-
-                // Отправим сигнал о выполнении задачи, с запасом времени в таймаут
-                TaskUnittest.SendResult(UnitTestResult.Success, Actual);
-            }
-            catch (ThreadAbortException)
-            {
+            if (!_options.Enabled)
                 return;
-            }
-            catch (OperationCanceledException)
-            {
-                // Задача остановлена, выходим
-                _inProgress = false;
-                return;
-            }
-            catch (Exception exception)
-            {
-                Logger.LogError(exception, exception.Message);
-            }
 
-            // Независимо от наличия ошибки, назначаем следующее выполнение
-            _timer.Dispose();
-            _timer = new Timer(OnTimerCallback, null, Interval, TimeSpan.FromMilliseconds(-1));
-
-            _inProgress = false;
+            Logger.LogTrace($"{Name} stopped");
+            await base.StopAsync(cancellationToken);
         }
 
-        protected IComponentControl TaskComponent { get; private set; }
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+        {
+            var preDelay = GetNextDelay();
+            Logger.LogTrace($"Waiting for {preDelay.OccurenceTime.ToString("o")}");
 
-        protected IUnitTestControl TaskUnittest { get; private set; }
+            await Task.Delay(preDelay.Delay, cancellationToken);
 
-        protected ILogger Logger { get; private set; }
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                Logger.LogTrace("Running task...");
+                try
+                {
+                    await DoWork(cancellationToken);
+                    Logger.LogTrace("Task completed");
+                    TaskUnittest.SendResult(UnitTestResult.Success, GetNextDelay().Delay * 2);
+                }
+                catch (Exception exception)
+                {
+                    Logger.LogError(exception, exception.Message);
+                    TaskUnittest.SendResult(UnitTestResult.Alarm, GetNextDelay().Delay * 2, exception.Message);
+                }
+
+                var delay = GetNextDelay();
+                Logger.LogTrace($"Waiting for {delay.OccurenceTime.ToString("o")}");
+
+                await Task.Delay(delay.Delay, cancellationToken);
+            }
+        }
+
+        protected DelayInfo GetNextDelay()
+        {
+            var currentUtcTime = DateTimeOffset.Now;
+            var occurenceTime = _cronExpression.GetNextOccurrence(currentUtcTime, TimeZoneInfo.Local).GetValueOrDefault();
+            var delay = occurenceTime - currentUtcTime;
+
+            return new DelayInfo()
+            {
+                OccurenceTime = occurenceTime,
+                Delay = delay
+            };
+        }
+
+        protected abstract Task DoWork(CancellationToken cancellationToken);
+
     }
 }

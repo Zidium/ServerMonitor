@@ -1,43 +1,68 @@
 ﻿using System;
-using Microsoft.Extensions.DependencyInjection;
+using System.Runtime.ExceptionServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace ZidiumServerMonitor
 {
-    public class DiskSpaceTask : BaseTask
+    internal class DiskSpaceTask : BaseTask
     {
-        public DiskSpaceTask()
+        public DiskSpaceTask(
+            ILoggerFactory loggerFactory,
+            ZidiumComponentsProvider zidiumComponentsProvider,
+            IOptions<DiskSpaceTaskOptions> options,
+            FreeSpaceService freeSpaceService) : base(loggerFactory, zidiumComponentsProvider, options.Value)
         {
-            _settings = DependencyInjection.Services.GetRequiredService<Settings>().Disk;
+            _options = options.Value;
+            _freeSpaceService = freeSpaceService;
         }
 
-        private Settings.FreeDiskSpaceTaskSettings _settings;
+        private readonly DiskSpaceTaskOptions _options;
+        private readonly FreeSpaceService _freeSpaceService;
 
-        public override TimeSpan Interval { get { return _settings.Interval; } }
+        public override string Name => "DiskSpaceTask";
 
-        public override TimeSpan Actual { get { return _settings.Timeout; } }
-
-        public override string Name { get { return "DiskSpaceTask"; } }
-
-        public override void DoWork()
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            foreach (var disk in _settings.Disks)
-            {
-                var freeSpace = FreeSpaceHelper.GetDriveFreeSpace(disk);
+            await base.StartAsync(cancellationToken);
 
-                if (freeSpace.HasValue)
+            if (!_options.Enabled)
+                return;
+
+            Logger.LogInformation($"Disks: {string.Join(", ", _options.Disks)}");
+        }
+
+        protected override Task DoWork(CancellationToken cancellationToken)
+        {
+            ExceptionDispatchInfo firstException = null;
+            foreach (var disk in _options.Disks)
+            {
+                try
                 {
-                    var freeSpaceGb = (double)freeSpace.Value / 1024 / 1024 / 1024;
-                    var freeSpaceGbRounded = Math.Round(freeSpaceGb, 2);
-                    ZidiumHelper.ServerComponent.SendMetric("Free space on disk " + disk + ", Gb", freeSpaceGbRounded, Actual);
-                    Logger.LogInformation($"Free space on disk {disk}: {freeSpaceGbRounded} Gb");
+                    var freeSpace = _freeSpaceService.GetDriveFreeSpace(disk);
+
+                    if (freeSpace.HasValue)
+                    {
+                        var freeSpaceGb = (double)freeSpace.Value / 1024 / 1024 / 1024;
+                        var freeSpaceGbRounded = Math.Round(freeSpaceGb, 2);
+                        var actual = GetNextDelay().Delay * 2;
+                        Logger.LogInformation($"Free space on disk {disk}: {freeSpaceGbRounded} Gb");
+                        ZidiumComponentsProvider.GetServerComponent().SendMetric("Free space on disk " + disk + ", Gb", freeSpaceGbRounded, actual);                        
+                    }
+                }
+                catch (Exception exception)
+                {
+                    if (firstException == null)
+                        firstException = ExceptionDispatchInfo.Capture(exception);
                 }
             }
-        }
 
-        protected override void DoStart()
-        {
-            Logger.LogDebug($"Disks: {string.Join(", ", _settings.Disks)}");
+            if (firstException != null)
+                firstException.Throw();
+
+            return Task.CompletedTask;
         }
     }
 }
