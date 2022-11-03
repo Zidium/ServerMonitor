@@ -1,0 +1,12 @@
+[Unit]
+Description=Zidium Server Monitor
+After=syslog.target network.target
+
+[Service]
+Type=notify
+WorkingDirectory=/path
+ExecStart=/usr/bin/dotnet ZidiumServerMonitor.dll
+SyslogIdentifier=ZidiumServerMonitor
+
+[Install]
+WantedBy=multi-user.target

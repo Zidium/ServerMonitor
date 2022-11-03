@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <Authors>Zidium</Authors>
+    <Product>ZidiumServerMonitor</Product>
+    <Version>2.0.0</Version>
+  </PropertyGroup>
+</Project>
