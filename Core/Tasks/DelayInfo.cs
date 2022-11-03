@@ -2,7 +2,7 @@
 
 namespace ZidiumServerMonitor
 {
-    internal struct DelayInfo
+    public struct DelayInfo
     {
         public DateTimeOffset OccurenceTime;
 

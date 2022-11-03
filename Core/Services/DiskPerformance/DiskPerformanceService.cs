@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace ZidiumServerMonitor
 {
-    internal class DiskPerformanceService
+    public class DiskPerformanceService
     {
         public DiskPerformanceService()
         {

@@ -3,22 +3,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Zidium;
 
 namespace ZidiumServerMonitor
 {
-    internal abstract class BaseCollector : BackgroundService
+    public abstract class BaseCollector : BackgroundService
     {
         protected BaseCollector(
             ILoggerFactory loggerFactory,
+            IZidiumComponentsProvider zidiumComponentsProvider, 
             bool enabled
             )
         {
             _loggerFactory = loggerFactory;
+            _zidiumComponentsProvider = zidiumComponentsProvider;
             _enabled = enabled;
         }
 
         private readonly ILoggerFactory _loggerFactory;
+        private readonly IZidiumComponentsProvider _zidiumComponentsProvider;
 
         protected abstract string Name { get; }
 
@@ -31,8 +33,7 @@ namespace ZidiumServerMonitor
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
             Logger = _loggerFactory.CreateLogger(Name);
-            _loggerFactory.AddZidiumErrors(null, Name);
-            _loggerFactory.AddZidiumLog(null, Name);
+            _zidiumComponentsProvider.ConnectLoggerToZidium(null, Name);
 
             if (!_enabled)
             {
@@ -49,7 +50,15 @@ namespace ZidiumServerMonitor
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                await DoWork(cancellationToken);
+                try
+                {
+                    await DoWork(cancellationToken);
+                }
+                catch (Exception exception)
+                {
+                    Logger.LogError(exception, exception.Message);
+                }
+
                 await Task.Delay(Interval, cancellationToken);
             }
         }

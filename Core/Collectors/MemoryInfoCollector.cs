@@ -7,14 +7,15 @@ using Microsoft.Extensions.Options;
 
 namespace ZidiumServerMonitor
 {
-    internal class MemoryInfoCollector : BaseCollector
+    public class MemoryInfoCollector : BaseCollector
     {
         public MemoryInfoCollector(
             ILoggerFactory loggerFactory,
+            IZidiumComponentsProvider zidiumComponentsProvider,
             HardwareInfo hardwareInfo,
             MemoryInfoDataboxService memoryInfoDataboxService,
             IOptions<MemoryTaskOptions> options
-            ) : base(loggerFactory, options.Value.Enabled)
+            ) : base(loggerFactory, zidiumComponentsProvider, options.Value.Enabled)
         {
             _hardwareInfo = hardwareInfo;
             _memoryInfoDataboxService = memoryInfoDataboxService;

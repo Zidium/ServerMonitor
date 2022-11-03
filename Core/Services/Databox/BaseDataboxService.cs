@@ -2,7 +2,7 @@
 
 namespace ZidiumServerMonitor
 {
-    internal abstract class BaseDataboxService<T> where T : new()
+    public abstract class BaseDataboxService<T> where T : new()
     {
         private T _value = new T();
 

@@ -10,11 +10,11 @@ using Zidium.Api.Dto;
 
 namespace ZidiumServerMonitor
 {
-    internal abstract class BaseTask : BackgroundService
+    public abstract class BaseTask : BackgroundService
     {
         protected BaseTask(
             ILoggerFactory loggerFactory,
-            ZidiumComponentsProvider zidiumComponentsProvider,
+            IZidiumComponentsProvider zidiumComponentsProvider,
             BaseTaskOptions options)
         {
             _loggerFactory = loggerFactory;
@@ -24,7 +24,7 @@ namespace ZidiumServerMonitor
 
         private readonly ILoggerFactory _loggerFactory;
 
-        protected readonly ZidiumComponentsProvider ZidiumComponentsProvider;
+        protected readonly IZidiumComponentsProvider ZidiumComponentsProvider;
 
         private readonly BaseTaskOptions _options;
 
@@ -53,11 +53,11 @@ namespace ZidiumServerMonitor
 
             TaskComponent = ZidiumComponentsProvider.GetMonitorComponent().GetOrCreateChildComponentControl("Task", Name);
             TaskUnittest = TaskComponent.GetOrCreateUnitTestControl("Main");
-            _loggerFactory.AddZidiumErrors(TaskComponent.Info?.Id, Name);
-            _loggerFactory.AddZidiumLog(TaskComponent.Info?.Id, Name);
+            ZidiumComponentsProvider.ConnectLoggerToZidium(TaskComponent.Info?.Id, Name);
 
             Logger.LogInformation($"Schedule: {_options.Schedule}");
             _cronExpression = CronExpression.Parse(_options.Schedule, CronFormat.IncludeSeconds);
+            Logger.LogInformation($"Actual interval: {_options.ActualInterval:c}");
             Logger.LogTrace($"{Name} started");
             await base.StartAsync(cancellationToken);
         }
@@ -85,12 +85,12 @@ namespace ZidiumServerMonitor
                 {
                     await DoWork(cancellationToken);
                     Logger.LogTrace("Task completed");
-                    TaskUnittest.SendResult(UnitTestResult.Success, GetNextDelay().Delay * 2);
+                    TaskUnittest.SendResult(UnitTestResult.Success, _options.ActualInterval);
                 }
                 catch (Exception exception)
                 {
                     Logger.LogError(exception, exception.Message);
-                    TaskUnittest.SendResult(UnitTestResult.Alarm, GetNextDelay().Delay * 2, exception.Message);
+                    TaskUnittest.SendResult(UnitTestResult.Alarm, _options.ActualInterval, exception.Message);
                 }
 
                 var delay = GetNextDelay();

@@ -1,6 +1,6 @@
 ﻿namespace ZidiumServerMonitor
 {
-    internal class MemoryInfoDatabox
+    public class MemoryInfoDatabox
     {
         public ulong? MinAvailablePhysical;
     }

@@ -2,7 +2,7 @@
 
 namespace ZidiumServerMonitor
 {
-    internal class MemoryInfoDataboxService : BaseDataboxService<MemoryInfoDatabox>
+    public class MemoryInfoDataboxService : BaseDataboxService<MemoryInfoDatabox>
     {
         protected override MemoryInfoDatabox Copy(MemoryInfoDatabox value)
         {

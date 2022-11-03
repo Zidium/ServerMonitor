@@ -1,16 +1,15 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace ZidiumServerMonitor
 {
-    internal class FreeSpaceService
+    public class FreeSpaceService
     {
-        public long? GetDriveFreeSpace(string drive)
+        public long GetDriveFreeSpace(string drive)
         {
             DriveInfo di;
 
+            /*
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 di = new DriveInfo(drive);
@@ -21,9 +20,11 @@ namespace ZidiumServerMonitor
                 Console.WriteLine(string.Join(", ", drives.Select(t => t.Name)));
                 di = drives.FirstOrDefault(t => t.Name.StartsWith(drive, StringComparison.OrdinalIgnoreCase));
             }
+            */
+            di = new DriveInfo(drive);
 
             if (di == null)
-                return null;
+                throw new Exception($"Disk {drive} not found");
 
             return di.AvailableFreeSpace;
         }

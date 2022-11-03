@@ -8,14 +8,15 @@ using Microsoft.Extensions.Options;
 
 namespace ZidiumServerMonitor
 {
-    internal class CpuInfoCollector : BaseCollector
+    public class CpuInfoCollector : BaseCollector
     {
         public CpuInfoCollector(
             ILoggerFactory loggerFactory,
+            IZidiumComponentsProvider zidiumComponentsProvider,
             HardwareInfo hardwareInfo,
             CpuInfoDataboxService cpuInfoDataboxService,
             IOptions<CpuTaskOptions> options
-            ) : base(loggerFactory, options.Value.Enabled)
+            ) : base(loggerFactory, zidiumComponentsProvider, options.Value.Enabled)
         {
             _hardwareInfo = hardwareInfo;
             _cpuInfoDataboxService = cpuInfoDataboxService;

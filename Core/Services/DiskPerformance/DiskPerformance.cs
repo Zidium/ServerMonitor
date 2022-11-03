@@ -1,6 +1,6 @@
 ﻿namespace ZidiumServerMonitor
 {
-    internal class DiskPerformance
+    public class DiskPerformance
     {
         public string Name;
 

@@ -6,11 +6,11 @@ using Microsoft.Extensions.Options;
 
 namespace ZidiumServerMonitor
 {
-    internal class MemoryTask : BaseTask
+    public class MemoryTask : BaseTask
     {
         public MemoryTask(
             ILoggerFactory loggerFactory,
-            ZidiumComponentsProvider zidiumComponentsProvider,
+            IZidiumComponentsProvider zidiumComponentsProvider,
             IOptions<MemoryTaskOptions> options,
             MemoryInfoDataboxService memoryInfoDataboxService
             ) : base(loggerFactory, zidiumComponentsProvider, options.Value)
@@ -28,18 +28,10 @@ namespace ZidiumServerMonitor
         protected override Task DoWork(CancellationToken cancellationToken)
         {
             var availablePhysicalMemory = _memoryInfoDataboxService.GetAndReset().MinAvailablePhysical;
-
-            if (!availablePhysicalMemory.HasValue)
-            {
-                Logger.LogInformation("Memory info not ready yet");
-                return Task.CompletedTask;
-            }
-
-            var freeMemoryGb = (double)availablePhysicalMemory / 1024 / 1024 / 1024;
-            var freeMemoryGbRounded = Math.Round(freeMemoryGb, 2);
-            var actual = GetNextDelay().Delay * 2;
+            var freeMemoryGb = availablePhysicalMemory.HasValue ? (double)availablePhysicalMemory / 1024 / 1024 / 1024 : (double?)null;
+            var freeMemoryGbRounded = freeMemoryGb.HasValue ? Math.Round(freeMemoryGb.Value, 2) : (double?)null;
             Logger.LogInformation($"Free memory: {freeMemoryGbRounded} Gb");
-            ZidiumComponentsProvider.GetServerComponent().SendMetric("Free memory, Gb", freeMemoryGbRounded, actual);            
+            ZidiumComponentsProvider.GetServerComponent().SendMetric("Free memory, Gb", freeMemoryGbRounded, _options.ActualInterval);
             return Task.CompletedTask;
         }
     }

@@ -1,23 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>ZidiumServerMonitor.Core</AssemblyName>
     <RootNamespace>ZidiumServerMonitor</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Cronos" Version="0.7.1" />
-    <PackageReference Include="Hardware.Info" Version="10.0.1" />
+    <PackageReference Include="Hardware.Info" Version="10.1.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="6.0.0" />
-    <PackageReference Include="NLog" Version="5.0.4" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
     <PackageReference Include="Zidium.Api" Version="2.0.0" />
-    <PackageReference Include="Zidium.NetCoreLogger" Version="2.0.0" />
   </ItemGroup>
 
 </Project>

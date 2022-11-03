@@ -7,11 +7,11 @@ using Microsoft.Extensions.Options;
 
 namespace ZidiumServerMonitor
 {
-    internal class DiskSpaceTask : BaseTask
+    public class DiskSpaceTask : BaseTask
     {
         public DiskSpaceTask(
             ILoggerFactory loggerFactory,
-            ZidiumComponentsProvider zidiumComponentsProvider,
+            IZidiumComponentsProvider zidiumComponentsProvider,
             IOptions<DiskSpaceTaskOptions> options,
             FreeSpaceService freeSpaceService) : base(loggerFactory, zidiumComponentsProvider, options.Value)
         {
@@ -20,6 +20,7 @@ namespace ZidiumServerMonitor
         }
 
         private readonly DiskSpaceTaskOptions _options;
+
         private readonly FreeSpaceService _freeSpaceService;
 
         public override string Name => "DiskSpaceTask";
@@ -42,15 +43,10 @@ namespace ZidiumServerMonitor
                 try
                 {
                     var freeSpace = _freeSpaceService.GetDriveFreeSpace(disk);
-
-                    if (freeSpace.HasValue)
-                    {
-                        var freeSpaceGb = (double)freeSpace.Value / 1024 / 1024 / 1024;
-                        var freeSpaceGbRounded = Math.Round(freeSpaceGb, 2);
-                        var actual = GetNextDelay().Delay * 2;
-                        Logger.LogInformation($"Free space on disk {disk}: {freeSpaceGbRounded} Gb");
-                        ZidiumComponentsProvider.GetServerComponent().SendMetric("Free space on disk " + disk + ", Gb", freeSpaceGbRounded, actual);                        
-                    }
+                    var freeSpaceGb = (double)freeSpace / 1024 / 1024 / 1024;
+                    var freeSpaceGbRounded = Math.Round(freeSpaceGb, 2);
+                    Logger.LogInformation($"Free space on disk {disk}: {freeSpaceGbRounded} Gb");
+                    ZidiumComponentsProvider.GetServerComponent().SendMetric("Free space on disk " + disk + ", Gb", freeSpaceGbRounded, _options.ActualInterval);
                 }
                 catch (Exception exception)
                 {

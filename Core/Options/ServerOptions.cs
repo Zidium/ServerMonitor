@@ -2,7 +2,7 @@
 
 namespace ZidiumServerMonitor
 {
-    internal class ServerOptions
+    public class ServerOptions
     {
         public Guid ComponentId { get; set; }
     }

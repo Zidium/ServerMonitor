@@ -1,6 +1,6 @@
 ﻿namespace ZidiumServerMonitor
 {
-    internal class MemoryTaskOptions : BaseTaskOptions
+    public class MemoryTaskOptions : BaseTaskOptions
     {
     }
 }

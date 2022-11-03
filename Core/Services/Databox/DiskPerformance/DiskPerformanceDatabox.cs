@@ -1,33 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
 
 namespace ZidiumServerMonitor
 {
-    internal class DiskPerformanceDatabox
+    public class DiskPerformanceDatabox
     {
-        public Dictionary<string, Disk> Disks = new Dictionary<string, Disk>();
+        public double QueueLengthSum;
 
-        internal class Disk
+        public double PercentTimeSum;
+
+        public int Count;
+
+        public double AverageQueueLength
         {
-            public double QueueLengthSum;
-
-            public double PercentTimeSum;
-
-            public int Count;
-
-            public double AverageQueueLength
+            get
             {
-                get
-                {
-                    return QueueLengthSum / Count;
-                }
+                return QueueLengthSum / Math.Max(Count, 1);
             }
+        }
 
-            public double AveragePercentTime
+        public double AveragePercentTime
+        {
+            get
             {
-                get
-                {
-                    return PercentTimeSum / Count;
-                }
+                return PercentTimeSum / Math.Max(Count, 1);
             }
         }
     }

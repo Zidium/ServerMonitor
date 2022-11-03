@@ -1,6 +1,6 @@
 ﻿namespace ZidiumServerMonitor
 {
-    internal class CpuInfoDataboxService : BaseDataboxService<CpuInfoDatabox>
+    public class CpuInfoDataboxService : BaseDataboxService<CpuInfoDatabox>
     {
         protected override CpuInfoDatabox Copy(CpuInfoDatabox value)
         {

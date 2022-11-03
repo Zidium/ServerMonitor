@@ -1,6 +1,8 @@
-﻿namespace ZidiumServerMonitor
+﻿using System;
+
+namespace ZidiumServerMonitor
 {
-    internal class CpuInfoDatabox
+    public class CpuInfoDatabox
     {
         public int UsagePercentSum;
 
@@ -10,7 +12,7 @@
         {
             get
             {
-                return (double)UsagePercentSum / UsageCount;
+                return (double)UsagePercentSum / Math.Max(UsageCount, 1);
             }
         }
     }

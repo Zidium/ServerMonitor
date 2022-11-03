@@ -50,7 +50,7 @@ namespace ZidiumServerMonitor
                 RedirectStandardOutput = true
             };
 
-            var process = Process.Start(processStartInfo);
+            using var process = Process.Start(processStartInfo);
             using StreamReader streamReader = process.StandardOutput;
             process.WaitForExit();
 

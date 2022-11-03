@@ -6,11 +6,11 @@ using Microsoft.Extensions.Options;
 
 namespace ZidiumServerMonitor
 {
-    internal class CpuTask : BaseTask
+    public class CpuTask : BaseTask
     {
         public CpuTask(
             ILoggerFactory loggerFactory,
-            ZidiumComponentsProvider zidiumComponentsProvider,
+            IZidiumComponentsProvider zidiumComponentsProvider,
             IOptions<CpuTaskOptions> options,
             CpuInfoDataboxService cpuInfoDataboxService
             ) : base(loggerFactory, zidiumComponentsProvider, options.Value)
@@ -28,17 +28,9 @@ namespace ZidiumServerMonitor
         protected override Task DoWork(CancellationToken cancellationToken)
         {
             var databox = _cpuInfoDataboxService.GetAndReset();
-
-            if (databox.UsageCount == 0)
-            {
-                Logger.LogInformation("Cpu info not ready yet");
-                return Task.CompletedTask;
-            }
-
-            var cpuUsage = Math.Round(databox.AverageUsagePercent, 2);
-            var actual = GetNextDelay().Delay * 2;
+            var cpuUsage = databox.UsageCount > 0 ? Math.Round(databox.AverageUsagePercent, 2) : (double?)null;
             Logger.LogInformation($"CPU usage: {cpuUsage}%");
-            ZidiumComponentsProvider.GetServerComponent().SendMetric("CPU usage, %", cpuUsage, actual);
+            ZidiumComponentsProvider.GetServerComponent().SendMetric("CPU usage, %", cpuUsage, _options.ActualInterval);
             return Task.CompletedTask;
         }
     }

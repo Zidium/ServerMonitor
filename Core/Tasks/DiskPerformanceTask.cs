@@ -6,43 +6,37 @@ using Microsoft.Extensions.Options;
 
 namespace ZidiumServerMonitor
 {
-    internal class DiskPerformanceTask : BaseTask
+    public class DiskPerformanceTask : BaseTask
     {
         public DiskPerformanceTask(
             ILoggerFactory loggerFactory,
-            ZidiumComponentsProvider zidiumComponentsProvider,
+            IZidiumComponentsProvider zidiumComponentsProvider,
             IOptions<DiskPerformanceTaskOptions> options,
-            DiskPerformanceDataboxService diskPerformanceDataboxService
+            DiskPerformanceDataboxServiceFactory diskPerformanceDataboxServiceFactory
             ) : base(loggerFactory, zidiumComponentsProvider, options.Value)
         {
-            _diskPerformanceDataboxService = diskPerformanceDataboxService;
+            _options = options.Value;
+            _diskPerformanceDataboxServiceFactory = diskPerformanceDataboxServiceFactory;
         }
 
-        private readonly DiskPerformanceDataboxService _diskPerformanceDataboxService;
+        private readonly DiskPerformanceTaskOptions _options;
+
+        private readonly DiskPerformanceDataboxServiceFactory _diskPerformanceDataboxServiceFactory;
 
         public override string Name => "DiskPerformanceTask";
 
         protected override Task DoWork(CancellationToken cancellationToken)
         {
-            var databox = _diskPerformanceDataboxService.GetAndReset();
-
-            if (databox.Disks.Count == 0)
+            foreach (var disk in _options.Disks)
             {
-                Logger.LogInformation("Disk performance info not ready yet");
-                return Task.CompletedTask;
-            }
+                var databox = _diskPerformanceDataboxServiceFactory.GetDataboxService(disk).GetAndReset();
 
-            var actual = GetNextDelay().Delay * 2;
+                var averageQueueLength = databox.Count > 0 ? Math.Round(databox.AverageQueueLength, 2) : (double?)null;
+                var averagePercentTime = databox.Count > 0 ? Math.Round(databox.AveragePercentTime, 2) : (double?)null;
 
-            foreach (var disk in databox.Disks)
-            {
-                var name = disk.Key;
-                var averageQueueLength = Math.Round(disk.Value.AverageQueueLength, 2);
-                var averagePercentTime = Math.Round(disk.Value.AveragePercentTime, 2);
-
-                Logger.LogInformation($"Disk '{name}', AverageQueueLength: {averageQueueLength}, AveragePercentTime: {averagePercentTime}");
-                ZidiumComponentsProvider.GetServerComponent().SendMetric($"Disk {name}, Average queue length", averageQueueLength, actual);
-                ZidiumComponentsProvider.GetServerComponent().SendMetric($"Disk {name}, Average percent time, %", averagePercentTime, actual);
+                Logger.LogInformation($"Disk '{disk}', AverageQueueLength: {averageQueueLength}, AveragePercentTime: {averagePercentTime}");
+                ZidiumComponentsProvider.GetServerComponent().SendMetric($"Disk {disk}, Average queue length", averageQueueLength, _options.ActualInterval);
+                ZidiumComponentsProvider.GetServerComponent().SendMetric($"Disk {disk}, Average percent time, %", averagePercentTime, _options.ActualInterval);
             }
 
             return Task.CompletedTask;
