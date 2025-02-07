@@ -29,7 +29,7 @@ Server Monitor - это приложение, написанное на .Net 6, 
 
 В параметре Tasks/DiskPerformanceTask/Disks укажите названия дисков, для которых вы хотите собирать данные производительности.
 Для Windows это названия счётчиков производительности, например "0 C:", их можно получить, выполнив в powershell команду `Get-WmiObject -Query "select Name from win32_perfformatteddata_perfdisk_physicaldisk"`.
-Для Linux это названия дисков, например "sda", их можно получить командой lsblk, столбец NAME.
+Для Linux это названия дисков, например "sda", их можно получить командой `lsblk`, столбец NAME. Также можно использовать уникальные ID дисков, выводимые командой `iostat -j id`, столбец Device. Если в ответ на эту команду выводится "Invalid type of persistent device name", то данная функция не поддерживается.
 
 Пример файла appsettings.Production.json:
 ```

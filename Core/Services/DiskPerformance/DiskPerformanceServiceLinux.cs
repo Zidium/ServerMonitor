@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
@@ -53,6 +54,9 @@ namespace ZidiumServerMonitor
             using var process = Process.Start(processStartInfo);
             using StreamReader streamReader = process.StandardOutput;
             process.WaitForExit();
+
+            if (process.ExitCode != 0)
+                throw new Exception($"Command \"{cmd} {args}\" returned a non-zero exit code ({process.ExitCode}).");
 
             return streamReader.ReadToEnd().Trim();
         }

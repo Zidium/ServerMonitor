@@ -1,6 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -42,17 +44,22 @@ namespace ZidiumServerMonitor
             ExceptionDispatchInfo firstException = null;
             foreach (var disk in _options.Disks)
             {
+                var diskName = disk;
+
                 try
                 {
-                    var diskPerformance = disksPerformance.FirstOrDefault(t => string.Equals(disk, t.Name, StringComparison.OrdinalIgnoreCase));
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                        diskName = CheckLinuxDiskById(diskName);
+
+                    var diskPerformance = disksPerformance.FirstOrDefault(t => string.Equals(diskName, t.Name, StringComparison.OrdinalIgnoreCase));
 
                     if (diskPerformance == null)
                         throw new Exception($"Performance data for disk '{disk}' not found");
 
                     diskPerformance.PercentDiskTime = Math.Min(diskPerformance.PercentDiskTime, 100);
 
-                    Logger.LogTrace($"Disk '{diskPerformance.Name}', AvgDiskQueueLength: {diskPerformance.AvgDiskQueueLength}, PercentDiskTime: {diskPerformance.PercentDiskTime}");
-                    _diskPerformanceDataboxServiceFactory.GetDataboxService(diskPerformance.Name).Set(diskPerformance.AvgDiskQueueLength, diskPerformance.PercentDiskTime);
+                    Logger.LogTrace($"Disk '{disk}', AvgDiskQueueLength: {diskPerformance.AvgDiskQueueLength}, PercentDiskTime: {diskPerformance.PercentDiskTime}");
+                    _diskPerformanceDataboxServiceFactory.GetDataboxService(disk).Set(diskPerformance.AvgDiskQueueLength, diskPerformance.PercentDiskTime);
                 }
                 catch (Exception exception)
                 {
@@ -65,6 +72,21 @@ namespace ZidiumServerMonitor
                 firstException.Throw();
 
             return Task.CompletedTask;
+        }
+
+        private static string CheckLinuxDiskById(string disk)
+        {
+            string idPath = $"/dev/disk/by-id/{disk}";
+
+            if (File.Exists(idPath))
+            {
+                var linkTarget = File.ResolveLinkTarget(idPath, true);
+
+                if (linkTarget != null)
+                    disk = linkTarget.Name;
+            }
+
+            return disk;
         }
     }
 }
